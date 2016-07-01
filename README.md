@@ -9,7 +9,7 @@ The code is a modification of the SLIC implementation provided by Scikit-image (
 
 An online demo is available at: http://maskslic.birving.com/index
 
-An outline of the method is available at: [arxiv.org]
+An outline of the method is available at: http://arxiv.org/abs/1606.09518
 
 Figure 1: An example region and the automatically placed seed points using this method. 
 
