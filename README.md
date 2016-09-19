@@ -1,7 +1,12 @@
 # maskSLIC
 Simple linear iterative clustering (SLIC) in a region of interest
 
+## Development
+This code is still a work in progress. The following issues still need to be resolved:
+[] Fix for calculating mean distance between points to improve compactness calculation (in progress)
+[] Fix the enforce connectivity method to work with maskSLIC
 
+## Outline
 This code demonstrates the adaption of SLIC for a defined region of interest. 
 The main contribution is in the placement of seed points within the ROI. 
 
