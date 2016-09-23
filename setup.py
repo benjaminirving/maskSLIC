@@ -29,7 +29,8 @@ extensions = [
     Extension("maskslic.processing",
               sources=["maskslic/processing.pyx",
                        "src/processing.cpp"],
-              include_dirs=["src", numpy.get_include()],
+              include_dirs=["src",
+                            numpy.get_include()],
               language="c++",
               extra_compile_args=["-std=c++11"])
 ]

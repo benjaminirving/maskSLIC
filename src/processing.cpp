@@ -16,20 +16,27 @@ long distance_measure(int ax, int ay, int az, int bx, int by, int bz)
     return dmeas;
 }
 
-// Get the vector distance (x, y, z) of the maximum distance between two closest points
-vector<int> get_mean_point_distance(vector<int> & x, vector<int> & y, vector<int> & z)
+// Get the vector distance (x, y, z) of the mean distance between pairs of closest points
+// - For each point, find it's closest neighbour and save the distance
+// - Take the mean of all the values to obtain the mean spacing between points
+//
+//
+vector<float> get_mean_point_distance(vector<int> & x, vector<int> & y, vector<int> & z)
 {
-    vector<int> dist (3, 0);
+    vector<float> dist (3, 0);
+    // distance pairs
     vector<int> sx;
     vector<int> sy;
     vector<int> sz;
 
-    long dmeas = numeric_limits<long>::max();
+    long dmeas;
     long dist1;
+    long nn;
 
 
     for (int m=0; m<x.size(); m++)
     {
+        dmeas = numeric_limits<long>::max();
         for (int n=0; n<x.size(); n++)
         {
             // Skip comparing point to itself
@@ -37,22 +44,25 @@ vector<int> get_mean_point_distance(vector<int> & x, vector<int> & y, vector<int
                 continue;
 
             // Calculate the squared distance between each point and every other
-            dist1 = distance_measure(x[m], y[m], z[m], z[n], y[n], z[n]);
+            dist1 = distance_measure(x[m], y[m], z[m], x[n], y[n], z[n]);
             if (dist1 < dmeas)
             {
-                // If closer then save the vector distance for that point
+                // If closer then save the indices for that point
                 dmeas = dist1;
-                sx.push_back(abs(x[m] - x[n]));
-                sy.push_back(abs(y[m] - y[n]));
-                sz.push_back(abs(z[m] - z[n]));
+                nn=n;
             }
 
         }
+
+        // Save the closest distance for that point
+        sx.push_back(abs(x[m] - x[nn]));
+        sy.push_back(abs(y[m] - y[nn]));
+        sz.push_back(abs(z[m] - z[nn]));
     }
 
-    int d0m = 0;
-    int d1m = 0;
-    int d2m = 0;
+    float d0m = 0;
+    float d1m = 0;
+    float d2m = 0;
     for (int r=0; r<sx.size(); r++)
     {
         d0m += sx.at(r);

@@ -9,4 +9,4 @@ using std::vector;
 
 using namespace std;
 
-vector<int> get_mean_point_distance(vector<int> & x, vector<int> & y, vector<int> & z);
+vector<float> get_mean_point_distance(vector<int> & x, vector<int> & y, vector<int> & z);

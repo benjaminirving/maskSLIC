@@ -11,7 +11,8 @@ roi = imread('chelsea_mask.png')
 # roi = img_as_float(chelsea_mask())
 roi = roi[:, :, 3] > 0
 
-segments = seg.slic(img, compactness=30, seed_type='nplace', mask=roi, n_segments=12,
+# Note that compactness is defined differently because a grid is not used. Lower compactness for maskSLIC is equivalent
+segments = seg.slic(img, compactness=10, seed_type='nplace', mask=roi, n_segments=12,
                     recompute_seeds=True, plot_examples=True)
 
 plt.figure()

@@ -4,16 +4,200 @@ import collections as coll
 import numpy as np
 from scipy import ndimage as ndi
 from scipy.ndimage.morphology import distance_transform_edt
+from scipy.ndimage.filters import gaussian_filter
+
 from maskslic.processing import get_mpd
 import warnings
 import matplotlib.pyplot as plt
-from skimage.segmentation import mark_boundaries
+# from skimage.segmentation import mark_boundaries
 
 
 from skimage.util import img_as_float, regular_grid
 from maskslic._slic import (_slic_cython,
                             _enforce_label_connectivity_cython)
 from skimage.color import rgb2lab
+
+
+def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
+
+    """
+    Method for placing seed points in an ROI
+
+    Note:
+    Optimal point placement problem is somewhat related to the k-center problem
+     metric facility location (MFL)
+     Maxmin facility location
+    https://en.wikipedia.org/wiki/Facility_location_problem
+
+    Parameters
+    ----------
+    image
+    mask
+    n_segments
+    spacing
+
+    Returns
+    -------
+
+    """
+
+    segments_z = np.zeros(n_segments, dtype=np.int64)
+    segments_y = np.zeros(n_segments, dtype=np.int64)
+    segments_x = np.zeros(n_segments, dtype=np.int64)
+
+    m_inv = np.copy(mask)
+
+    # SEED STEP 1:  n seeds are placed as far as possible from every other seed and the edge.
+
+    theta = 0
+
+    for ii in range(n_segments):
+
+        # distance transform
+
+        dtrans = distance_transform_edt(m_inv, sampling=spacing)
+        dtrans = gaussian_filter(dtrans, sigma=2.0)
+
+        # dtransg = ndi.gaussian_gradient_magnitude(dtrans, sigma=2.0)
+        # plt.figure()
+        # plt.imshow(mask[0, :, :])
+        # plt.figure()
+        # plt.imshow(m_inv[0, :, :])
+        # plt.show()
+
+        perc1 = np.percentile(dtrans, q=q)
+        mask_dtrans = dtrans > perc1
+        pdtrans, nb_labels = ndi.label(mask_dtrans)
+
+        # plt.figure()
+        # plt.imshow(pdtrans[0, :, :])
+        # plt.show()
+
+        if ii < 2:
+            sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
+            # Use the maximum locations for the first two points
+            coords1 = np.nonzero(pdtrans == np.argmax(sizes))
+            segments_z[ii] = round(np.mean(coords1[0]))
+            segments_x[ii] = round(np.mean(coords1[1]))
+            segments_y[ii] = round(np.mean(coords1[2]))
+
+        else:
+            # Define a vector that is used to produce a reference frame
+            u = np.array([segments_x[1] - segments_x[0], segments_y[1] - segments_y[0]])
+            u = u / np.sqrt(np.sum(u**2))
+
+            phi = np.zeros((nb_labels,))
+            for vv in range(nb_labels):
+                coords1 = np.nonzero(pdtrans == (vv+1))
+                v = np.array([np.mean(coords1[1]) - segments_x[0], np.mean(coords1[2] - segments_y[0])])
+                v = v / np.sqrt(np.sum(v**2))
+
+                # Directed angle
+                va = np.arctan2(v[1], v[0])
+                if va < 0:
+                    va += 2*np.pi
+                ua = np.arctan2(u[1], u[0])
+                if ua < 0:
+                    ua += 2*np.pi
+
+                phi[vv] = va - ua
+                if phi[vv] < 0:
+                    phi[vv] += 2*np.pi
+
+            # Difference between previous theta and current theta
+            phidiff = phi - theta
+            # print("phidiff 1: ", phidiff)
+
+            phidiff += (phidiff < 0) * 2*np.pi
+            # print("phidiff 2: ", phidiff)
+            iphi = np.argmin(phidiff)
+
+            theta = phi[iphi]
+            # print("theta: ", theta)
+
+            coords1 = np.nonzero(pdtrans == (iphi+1))
+            segments_z[ii] = round(np.mean(coords1[0]))
+            segments_x[ii] = round(np.mean(coords1[1]))
+            segments_y[ii] = round(np.mean(coords1[2]))
+
+            # Calculate a reference vector for each candidate
+            # Calculate each candidate angle
+            # Choose the next greatest angle in the anti-clockwise direction
+
+
+        # plt.figure()
+        # plt.imshow(pdtrans[0, :, :])
+        # plt.show()
+
+
+        # mcoords = np.nonzero(dtrans == np.max(dtrans))
+        #
+        # # TODO: How about maximising the summed distance from all other points? Or n closest points as a
+        # # TODO: way to get rid of the redundancy of having multiple choices?
+        # # TODO: midpoint of the largest connected line
+        #
+        # if len(mcoords[0]) > 1:
+        #     print("X:", mcoords[1])
+        #     print("Y:", mcoords[2])
+        #
+        #     if ii == 0:
+        #         print("shit")
+        #         continue
+        #
+        #     d2 = np.zeros((len(mcoords[0]),))
+        #     for cc in range(len(mcoords[0])):
+        #         d2[cc] = np.sum(np.sqrt((segments_x - mcoords[1][cc])**2 + (segments_y - mcoords[2][cc])**2))
+        #
+        #     # Select value that maximises the distance
+        #     p1 = np.argmax(d2)
+        #
+        #     # plt.figure()
+        #     # plt.imshow(image[0, :, :, 1])
+        #     # plt.plot(mcoords[2], mcoords[1], 'ro')
+        #     # plt.plot(mcoords[2][p1], mcoords[1][p1], 'go')
+        #     # plt.show()
+        #
+        #     segments_z[ii] = mcoords[0][p1]
+        #     segments_x[ii] = mcoords[1][p1]
+        #     segments_y[ii] = mcoords[2][p1]
+        #
+        # else:
+        #
+        #     segments_z[ii] = mcoords[0][0]
+        #     segments_x[ii] = mcoords[1][0]
+        #     segments_y[ii] = mcoords[2][0]
+
+        # adding a new point
+        m_inv[segments_z[ii], segments_x[ii], segments_y[ii]] = False
+
+        # Plot: Illustrate the seed point selection method
+
+        # plt.figure()
+        # plt.imshow(img)
+        # my_cmap = plt.cm.get_cmap('jet')  # get a copy of the gray color map
+        # my_cmap.set_bad(alpha=0)  # s
+        # d11 = dtrans[segments_z[ii], :, :]
+        # d11[d11==0] = np.nan
+        # plt.imshow(d11, cmap=my_cmap)
+        # plt.contour(mask[segments_z[ii], :, :] == 1, contours=1, colors='red', linewidths=1)
+        # plt.plot(segments_y[ii], segments_x[ii], marker='o', color='green')
+        # plt.axis('off')
+        # plt.show()
+
+    segments_color = np.zeros((segments_z.shape[0], image.shape[3]))
+    segments = np.concatenate([segments_z[..., np.newaxis],
+                               segments_x[..., np.newaxis],
+                               segments_y[..., np.newaxis],
+                               segments_color], axis=1)
+
+    sz = np.ascontiguousarray(segments_z, dtype=np.int32)
+    sx = np.ascontiguousarray(segments_x, dtype=np.int32)
+    sy = np.ascontiguousarray(segments_y, dtype=np.int32)
+
+    out1 = get_mpd(sz, sx, sy)
+    step_z, step_x, step_y = out1[0], out1[1], out1[2]
+
+    return segments, step_x, step_y, step_z
 
 
 def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
@@ -121,7 +305,11 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
     """
 
     img = np.copy(image)
-    msk = np.copy(mask==1)
+    if mask is not None:
+        msk = np.copy(mask==1)
+    else:
+        msk = None
+    # print("mask shape", msk.shape)
 
     if mask is None and seed_type == 'nplace':
         warnings.warn('nrandom assignment of seed points should only be used with an ROI. Changing seed type.')
@@ -130,8 +318,8 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
     if seed_type == 'nplace' and recompute_seeds is False:
         warnings.warn('Seeds should be recomputed when seed points are randomly assigned')
 
-
     image = img_as_float(image)
+
     is_2d = False
     if image.ndim == 2:
         # 2D grayscale image
@@ -177,50 +365,9 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
     depth, height, width = image.shape[:3]
 
     if seed_type == 'nplace':
-        segments_z = np.zeros(n_segments)
-        segments_y = np.zeros(n_segments)
-        segments_x = np.zeros(n_segments)
 
-        m_inv = np.copy(mask)
-
-        # SEED STEP 1:  n seeds are placed as far as possible from every other seed and the edge.
-        for ii in range(n_segments):
-            # TODO. Warning sampling is currently hard coded
-            dtrans = distance_transform_edt(m_inv, sampling=spacing)
-
-            mcoords = np.nonzero(dtrans == np.max(dtrans))
-
-            segments_z[ii] = mcoords[0][0]
-            segments_x[ii] = mcoords[1][0]
-            segments_y[ii] = mcoords[2][0]
-
-            m_inv[segments_z[ii], segments_x[ii], segments_y[ii]] = False
-
-            # Plot: Illustrate the seed point selection method
-
-            # plt.figure()
-            # plt.imshow(img)
-            # my_cmap = plt.cm.get_cmap('jet')  # get a copy of the gray color map
-            # my_cmap.set_bad(alpha=0)  # s
-            # d11 = dtrans[segments_z[ii], :, :]
-            # d11[d11==0] = np.nan
-            # plt.imshow(d11, cmap=my_cmap)
-            # plt.contour(mask[segments_z[ii], :, :] == 1, contours=1, colors='red', linewidths=1)
-            # plt.plot(segments_y[ii], segments_x[ii], marker='o', color='green')
-            # plt.axis('off')
-
-        segments_color = np.zeros((segments_z.shape[0], image.shape[3]))
-        segments = np.concatenate([segments_z[..., np.newaxis],
-                                   segments_x[..., np.newaxis],
-                                   segments_y[..., np.newaxis],
-                                   segments_color], axis=1)
-
-        sz = np.ascontiguousarray(segments_z, dtype=np.int32)
-        sx = np.ascontiguousarray(segments_x, dtype=np.int32)
-        sy = np.ascontiguousarray(segments_y, dtype=np.int32)
-
-        out1 = get_mpd(sz, sx, sy)
-        step_z, step_x, step_y = out1[0], out1[1], out1[2]
+        segments, step_x, step_y, step_z = place_seed_points(image, img, mask, n_segments, spacing)
+        # print('{0}, {1}, {2}'.format(step_x, step_y, step_z))
 
     elif seed_type == 'grid':
 
@@ -234,6 +381,7 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
         segments_y = grid_y[slices]
         segments_x = grid_x[slices]
 
+
         # mask_ind = mask[slices].reshape(-1)
         # list of all locations as well as zeros for the color features
         segments_color = np.zeros(segments_z.shape + (image.shape[3],))
@@ -242,6 +390,11 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
                                    segments_x[..., np.newaxis],
                                    segments_color],
                                   axis=-1).reshape(-1, 3 + image.shape[3])
+
+        if mask is not None:
+            ind1 = mask[segments[:, 0].astype('int'), segments[:, 1].astype('int'), segments[:, 2].astype('int')]
+            segments = segments[ind1, :]
+
 
         # seg_list = []
         # for ii in range(segments.shape[0]):
@@ -271,16 +424,18 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
 
     # Testing
     if plot_examples:
-        # fig = plt.figure()
-        # plt.imshow(img)
-        # # plt.contour(msk, contours=1, colors='red', linewidths=1)
-        # plt.scatter(segments_old[:, 2], segments_old[:, 1], color='blue')
-        # plt.axis('off')
+        fig = plt.figure()
+        plt.imshow(img)
+        if msk is not None:
+            plt.contour(msk, contours=1, colors='yellow', linewidths=1)
+        plt.scatter(segments_old[:, 2], segments_old[:, 1], color='green')
+        plt.axis('off')
 
         fig = plt.figure()
         plt.imshow(img)
-        # plt.contour(msk, contours=1, colors='red', linewidths=1)
-        plt.scatter(segments[:, 2], segments[:, 1], color='blue')
+        if msk is not None:
+            plt.contour(msk, contours=1, colors='yellow', linewidths=1)
+        plt.scatter(segments[:, 2], segments[:, 1], color='green')
         plt.axis('off')
 
     # image = np.ascontiguousarray(image * ratio)
