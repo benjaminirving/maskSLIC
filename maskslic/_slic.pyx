@@ -215,7 +215,7 @@ def _slic_cython(double[:, :, :, ::1] image_zyx,
     return np.asarray(nearest_segments)
 
 
-def _enforce_label_connectivity_cython(Py_ssize_t[:, :, ::1] segments,
+def _enforce_label_connectivity_cython(int[:, :, ::1] segments,
                                        int[:, :, ::1] mask,
                                        Py_ssize_t n_segments,
                                        Py_ssize_t min_size,

@@ -257,9 +257,9 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
 
     """
 
-    if enforce_connectivity:
-        raise NotImplementedError("Enforce connectivity has not been implemented yet for maskSLIC.\n"
-                                  "Please set enforce connectivity to 'False' ")
+    # if enforce_connectivity:
+    #    raise NotImplementedError("Enforce connectivity has not been implemented yet for maskSLIC.\n"
+    #                              "Please set enforce connectivity to 'False' ")
 
     if slic_zero:
         raise NotImplementedError("Slic zero has not been implemented yet for maskSLIC.")
@@ -404,14 +404,15 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
     labels = _slic_cython(image, mask, segments, step, max_iter, spacing, slic_zero, only_dist=False)
 
     if enforce_connectivity:
-        segment_size = depth * height * width / n_segments
+        if msk is None:
+            segment_size = depth * height * width / n_segments
+        else:
+            segment_size = msk.sum() / n_segments
+
         min_size = int(min_size_factor * segment_size)
         max_size = int(max_size_factor * segment_size)
-        labels = _enforce_label_connectivity_cython(labels,
-													mask,
-                                                    n_segments,
-                                                    min_size,
-                                                    max_size)
+
+        labels = _enforce_label_connectivity_cython(labels, mask, n_segments, min_size, max_size)
 
     if is_2d:
         labels = labels[0]

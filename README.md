@@ -1,10 +1,6 @@
 # maskSLIC
 Simple linear iterative clustering (SLIC) in a region of interest
 
-## Development
-This code is still a work in progress. The following issues still need to be resolved:
-- [ ] Fix the enforce connectivity method to work with maskSLIC
-
 ## Outline
 This code demonstrates the adaption of SLIC for a defined region of interest. 
 The main contribution is in the placement of seed points within the ROI. 
@@ -23,4 +19,5 @@ Figure 2: The final superpixel regions within the ROI
 
 ![superpixels](outputs/p2.png)
 
-
+## Development
+This code is still a work in progress.
