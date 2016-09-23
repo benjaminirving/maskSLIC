@@ -120,53 +120,6 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
             segments_x[ii] = round(np.mean(coords1[1]))
             segments_y[ii] = round(np.mean(coords1[2]))
 
-            # Calculate a reference vector for each candidate
-            # Calculate each candidate angle
-            # Choose the next greatest angle in the anti-clockwise direction
-
-
-        # plt.figure()
-        # plt.imshow(pdtrans[0, :, :])
-        # plt.show()
-
-
-        # mcoords = np.nonzero(dtrans == np.max(dtrans))
-        #
-        # # TODO: How about maximising the summed distance from all other points? Or n closest points as a
-        # # TODO: way to get rid of the redundancy of having multiple choices?
-        # # TODO: midpoint of the largest connected line
-        #
-        # if len(mcoords[0]) > 1:
-        #     print("X:", mcoords[1])
-        #     print("Y:", mcoords[2])
-        #
-        #     if ii == 0:
-        #         print("shit")
-        #         continue
-        #
-        #     d2 = np.zeros((len(mcoords[0]),))
-        #     for cc in range(len(mcoords[0])):
-        #         d2[cc] = np.sum(np.sqrt((segments_x - mcoords[1][cc])**2 + (segments_y - mcoords[2][cc])**2))
-        #
-        #     # Select value that maximises the distance
-        #     p1 = np.argmax(d2)
-        #
-        #     # plt.figure()
-        #     # plt.imshow(image[0, :, :, 1])
-        #     # plt.plot(mcoords[2], mcoords[1], 'ro')
-        #     # plt.plot(mcoords[2][p1], mcoords[1][p1], 'go')
-        #     # plt.show()
-        #
-        #     segments_z[ii] = mcoords[0][p1]
-        #     segments_x[ii] = mcoords[1][p1]
-        #     segments_y[ii] = mcoords[2][p1]
-        #
-        # else:
-        #
-        #     segments_z[ii] = mcoords[0][0]
-        #     segments_x[ii] = mcoords[1][0]
-        #     segments_y[ii] = mcoords[2][0]
-
         # adding a new point
         m_inv[segments_z[ii], segments_x[ii], segments_y[ii]] = False
 
