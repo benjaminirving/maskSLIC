@@ -3,7 +3,6 @@ Simple linear iterative clustering (SLIC) in a region of interest
 
 ## Development
 This code is still a work in progress. The following issues still need to be resolved:
-- [ ] Fix for calculating mean distance between points to improve compactness calculation (in progress)
 - [ ] Fix the enforce connectivity method to work with maskSLIC
 
 ## Outline

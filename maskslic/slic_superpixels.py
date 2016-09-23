@@ -1,5 +1,5 @@
 # coding=utf-8
-
+from __future__ import division, absolute_import, unicode_literals, print_function
 import collections as coll
 import numpy as np
 from scipy import ndimage as ndi
@@ -303,6 +303,14 @@ def slic(image, n_segments=100, compactness=10., max_iter=10, sigma=0,
     >>> segments = slic(img, n_segments=100, compactness=20)
 
     """
+
+    if enforce_connectivity:
+        raise NotImplementedError("Enforce connectivity has not been implemented yet for maskSLIC.\n"
+                                  "Please set enforce connectivity to 'False' ")
+
+    if slic_zero:
+        raise NotImplementedError("Slic zero has not been implemented yet for maskSLIC.")
+
 
     img = np.copy(image)
     if mask is not None:
