@@ -19,5 +19,19 @@ Figure 2: The final superpixel regions within the ROI
 
 ![superpixels](outputs/p2.png)
 
+## Getting started
+
+Install dependencies  
+`pip install -r requirements.txt`
+
+build cython code  
+`python setup.py build_ext --inplace`
+
+run example  
+`python run_example.py`
+
+Using a python `virtualenv` is reccommended on linux to get the latest versions of the dependencies. 
+
+
 ## Development
 This code is still a work in progress.
