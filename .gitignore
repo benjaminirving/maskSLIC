@@ -1,0 +1,15 @@
+
+.gitignore
+.idea/
+__pycache__/
+build/
+maskslic/__init__.pyc
+maskslic/__pycache__/
+maskslic/_slic.c
+maskslic/_slic.cpython-34m.so
+maskslic/_slic.so
+maskslic/processing.cpython-34m.so
+maskslic/processing.so
+maskslic/slic_superpixels.pyc
+slic_testing.pyc
+
