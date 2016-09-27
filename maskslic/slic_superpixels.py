@@ -46,6 +46,11 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
     segments_x = np.zeros(n_segments, dtype=np.int64)
 
     m_inv = np.copy(mask)
+    nz = np.nonzero(m_inv)
+    p = [np.min(nz[0]), np.min(nz[1]), np.min(nz[2])]
+    pend = [np.max(nz[0]), np.max(nz[1]), np.max(nz[2])]
+    # cropping to bounding box around ROI
+    m_inv = m_inv[p[0]:pend[0]+1, p[1]:pend[1]+1, p[2]:pend[2]+1]
 
     # SEED STEP 1:  n seeds are placed as far as possible from every other seed and the edge.
 
@@ -73,7 +78,8 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
         # plt.imshow(pdtrans[0, :, :])
         # plt.show()
 
-        if ii < 2:
+        # TODO temporarily just sticking to the original method until new method has been validated.
+        if ii < 1E6:
             sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
             # Use the maximum locations for the first two points
             coords1 = np.nonzero(pdtrans == np.argmax(sizes))
@@ -136,6 +142,10 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
         # plt.plot(segments_y[ii], segments_x[ii], marker='o', color='green')
         # plt.axis('off')
         # plt.show()
+
+    segments_z = segments_z + p[0]
+    segments_x = segments_x + p[1]
+    segments_y = segments_y + p[2]
 
     segments_color = np.zeros((segments_z.shape[0], image.shape[3]))
     segments = np.concatenate([segments_z[..., np.newaxis],
