@@ -61,7 +61,7 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
         # distance transform
 
         dtrans = distance_transform_edt(m_inv, sampling=spacing)
-        dtrans = gaussian_filter(dtrans, sigma=2.0)
+        dtrans = gaussian_filter(dtrans, sigma=0.5)
 
         # dtransg = ndi.gaussian_gradient_magnitude(dtrans, sigma=2.0)
         # plt.figure()
@@ -78,53 +78,12 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
         # plt.imshow(pdtrans[0, :, :])
         # plt.show()
 
-        # TODO temporarily just sticking to the original method until new method has been validated.
-        if ii < 1E6:
-            sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
-            # Use the maximum locations for the first two points
-            coords1 = np.nonzero(pdtrans == np.argmax(sizes))
-            segments_z[ii] = round(np.mean(coords1[0]))
-            segments_x[ii] = round(np.mean(coords1[1]))
-            segments_y[ii] = round(np.mean(coords1[2]))
-
-        else:
-            # Define a vector that is used to produce a reference frame
-            u = np.array([segments_x[1] - segments_x[0], segments_y[1] - segments_y[0]])
-            u = u / np.sqrt(np.sum(u**2))
-
-            phi = np.zeros((nb_labels,))
-            for vv in range(nb_labels):
-                coords1 = np.nonzero(pdtrans == (vv+1))
-                v = np.array([np.mean(coords1[1]) - segments_x[0], np.mean(coords1[2] - segments_y[0])])
-                v = v / np.sqrt(np.sum(v**2))
-
-                # Directed angle
-                va = np.arctan2(v[1], v[0])
-                if va < 0:
-                    va += 2*np.pi
-                ua = np.arctan2(u[1], u[0])
-                if ua < 0:
-                    ua += 2*np.pi
-
-                phi[vv] = va - ua
-                if phi[vv] < 0:
-                    phi[vv] += 2*np.pi
-
-            # Difference between previous theta and current theta
-            phidiff = phi - theta
-            # print("phidiff 1: ", phidiff)
-
-            phidiff += (phidiff < 0) * 2*np.pi
-            # print("phidiff 2: ", phidiff)
-            iphi = np.argmin(phidiff)
-
-            theta = phi[iphi]
-            # print("theta: ", theta)
-
-            coords1 = np.nonzero(pdtrans == (iphi+1))
-            segments_z[ii] = round(np.mean(coords1[0]))
-            segments_x[ii] = round(np.mean(coords1[1]))
-            segments_y[ii] = round(np.mean(coords1[2]))
+        sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
+        # Use the maximum locations for the first two points
+        coords1 = np.nonzero(pdtrans == np.argmax(sizes))
+        segments_z[ii] = round(np.mean(coords1[0]))
+        segments_x[ii] = round(np.mean(coords1[1]))
+        segments_y[ii] = round(np.mean(coords1[2]))
 
         # adding a new point
         m_inv[segments_z[ii], segments_x[ii], segments_y[ii]] = False
