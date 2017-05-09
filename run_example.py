@@ -1,3 +1,6 @@
+
+
+
 from __future__ import division, absolute_import, unicode_literals, print_function
 
 import matplotlib.pyplot as plt
@@ -8,6 +11,7 @@ from skimage.segmentation import mark_boundaries
 from skimage.io import imread
 import time
 
+# Load image
 img = imread('chelsea.png')
 
 # The ROI is also stored as an image for viewing convenience
@@ -17,7 +21,7 @@ roi = imread('chelsea_mask.png')
 # The alpha channel is used to store the ROI in this case and is converted into a logical array of 0s and 1s
 roi = roi[:, :, 3] > 0
 
-# Alternatively a mask could be created manually with for example:
+# Alternatively a mask could be created manually with for example a disk:
 # roi = np.zeros((img.shape[0], img.shape[1]))
 # a, b = 150, 150
 # r = 100
