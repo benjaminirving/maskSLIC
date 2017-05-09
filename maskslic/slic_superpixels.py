@@ -54,36 +54,19 @@ def place_seed_points(image, img, mask, n_segments, spacing, q=99.99):
 
     # SEED STEP 1:  n seeds are placed as far as possible from every other seed and the edge.
 
-    theta = 0
-
     for ii in range(n_segments):
 
         # distance transform
 
         dtrans = distance_transform_edt(m_inv, sampling=spacing)
-        dtrans = gaussian_filter(dtrans, sigma=0.5)
+        dtrans = gaussian_filter(dtrans, sigma=0.1)
 
-        # dtransg = ndi.gaussian_gradient_magnitude(dtrans, sigma=2.0)
-        # plt.figure()
-        # plt.imshow(mask[0, :, :])
-        # plt.figure()
-        # plt.imshow(m_inv[0, :, :])
-        # plt.show()
-
-        perc1 = np.percentile(dtrans, q=q)
-        mask_dtrans = dtrans > perc1
-        pdtrans, nb_labels = ndi.label(mask_dtrans)
-
-        # plt.figure()
-        # plt.imshow(pdtrans[0, :, :])
-        # plt.show()
-
-        sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
+        # sizes = ndi.sum(mask_dtrans, pdtrans, range(nb_labels + 1))
         # Use the maximum locations for the first two points
-        coords1 = np.nonzero(pdtrans == np.argmax(sizes))
-        segments_z[ii] = round(np.mean(coords1[0]))
-        segments_x[ii] = round(np.mean(coords1[1]))
-        segments_y[ii] = round(np.mean(coords1[2]))
+        coords1 = np.nonzero(dtrans == np.max(dtrans))
+        segments_z[ii] = coords1[0][0]
+        segments_x[ii] = coords1[1][0]
+        segments_y[ii] = coords1[2][0]
 
         # adding a new point
         m_inv[segments_z[ii], segments_x[ii], segments_y[ii]] = False
