@@ -13,17 +13,17 @@ img = imread('chelsea.png')
 # The ROI is also stored as an image for viewing convenience
 # But the roi input input maskSLIC should be a binary image with the same spatial
 # Dimensions as the image (in this case 300x451)
-# roi = imread('chelsea_mask.png')
+roi = imread('chelsea_mask.png')
 # The alpha channel is used to store the ROI in this case and is converted into a logical array of 0s and 1s
-# roi = roi[:, :, 3] > 0
+roi = roi[:, :, 3] > 0
 
 # Alternatively a mask could be created manually with for example:
-roi = np.zeros((img.shape[0], img.shape[1]))
-a, b = 150, 150
-r = 100
-y,x = np.ogrid[-a:img.shape[0]-a, -b:img.shape[1]-b]
-mask = x*x + y*y <= r*r
-roi[mask] = 1
+# roi = np.zeros((img.shape[0], img.shape[1]))
+# a, b = 150, 150
+# r = 100
+# y,x = np.ogrid[-a:img.shape[0]-a, -b:img.shape[1]-b]
+# mask = x*x + y*y <= r*r
+# roi[mask] = 1
 
 
 # ~~~~~~~~~~~~ Example 1: maskSLIC ~~~~~~~~~~~~~
