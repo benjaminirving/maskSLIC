@@ -12,4 +12,5 @@ maskslic/processing.cpython-34m.so
 maskslic/processing.so
 maskslic/slic_superpixels.pyc
 slic_testing.pyc
+*.so
 
