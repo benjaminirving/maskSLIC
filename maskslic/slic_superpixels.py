@@ -1,3 +1,15 @@
+"""
+
+Modified from scikit-image slic method
+
+Original code (C) scikit-image
+
+Modification (C) Benjamin Irving
+
+See licence.txt for more details
+
+"""
+
 # coding=utf-8
 from __future__ import division, absolute_import, unicode_literals, print_function
 import collections as coll
