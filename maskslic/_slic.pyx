@@ -1,3 +1,15 @@
+"""
+
+Modified from scikit-image slic method
+
+Original code (C) scikit-image
+
+Modifications (C) Benjamin Irving
+
+See licence.txt for more details
+
+"""
+
 #cython: cdivision=True
 #cython: boundscheck=False
 #cython: nonecheck=False
